@@ -1,0 +1,54 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <Description>Obfuscation Tasks</Description>
+    <PackageId>Obfuscation.Tasks</PackageId>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageTags>Obfuscation;Msbuild Tasks</PackageTags>
+    <BuildOutputTargetFolder>tasks</BuildOutputTargetFolder>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir)logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="$(SolutionDir)README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="$(SolutionDir)LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="17.*" Condition="'$(TargetFramework)' == 'net472'" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.*" />
+    <!--<PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.*" />-->
+    <PackageReference Update="@(PackageReference)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\build\**" Pack="True" PackagePath="build\" />
+    <None Include="Assets\buildMultiTargeting\**" Pack="True" PackagePath="buildMultiTargeting\" />
+  </ItemGroup>
+
+  <Target Name="CopyPackages" AfterTargets="GenerateNuspec">
+    <PropertyGroup>
+      <OutputPackageDir>$(SolutionDir)packages</OutputPackageDir>
+      <NuPkgFiles>$(MSBuildProjectDirectory)\$(OutputPath)$(PackageId).$(Version).nupkg</NuPkgFiles>
+    </PropertyGroup>
+    <Message Text="NuPkgFiles: $(NuPkgFiles)" Importance="high" />
+    <Copy SourceFiles="$(NuPkgFiles)" DestinationFolder="$(OutputPackageDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+    <Message Text="Copy $(NuPkgFiles) to $(OutputPackageDir) successfully" Importance="high" />
+  </Target>
+
+</Project>

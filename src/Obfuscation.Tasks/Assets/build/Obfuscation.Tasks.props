@@ -1,0 +1,15 @@
+﻿<Project TreatAsLocalProperty="TaskFolder;TaskAssembly">
+
+  <PropertyGroup>
+    <!--
+      MicrosoftNETBuildTasksTFM: net461, net472, net5.0
+    -->
+    <!--<TaskFolder Condition=" '$(MSBuildRuntimeType)' != 'Core' and '$(MicrosoftNETBuildTasksTFM)' == 'net472' ">net472</TaskFolder>
+    <TaskFolder Condition=" '$(MSBuildRuntimeType)' != 'Core' and '$(MicrosoftNETBuildTasksTFM)' != 'net472' ">net461</TaskFolder>-->
+    <TaskFolder Condition=" '$(MSBuildRuntimeType)' != 'Core' ">net472</TaskFolder>
+    <TaskFolder Condition=" '$(MSBuildRuntimeType)' == 'Core' ">netstandard2.0</TaskFolder>
+    <TaskAssembly>$(MSBuildThisFileDirectory)..\tasks\$(TaskFolder)\Obfuscation.Tasks.dll</TaskAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="Obfuscation.Tasks.ObfuscationTask" AssemblyFile="$(TaskAssembly)" />
+</Project>
