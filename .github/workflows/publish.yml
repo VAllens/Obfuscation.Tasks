@@ -1,9 +1,9 @@
 name: NuGet Publish
 
 on:
-  pull_request_review:
-    types:
-      - submitted
+  push:
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
 
 jobs:
