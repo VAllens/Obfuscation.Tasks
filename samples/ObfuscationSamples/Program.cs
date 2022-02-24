@@ -1,5 +1,12 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using System;
 
-using System.ComponentModel.DataAnnotations;
-
-Console.WriteLine("Hello, World!");
+namespace ObfuscationSamples
+{
+    class Program
+    {
+        static void Main(params string[] args)
+        {
+            Console.WriteLine("Hello, World!");
+        }
+    }
+}
