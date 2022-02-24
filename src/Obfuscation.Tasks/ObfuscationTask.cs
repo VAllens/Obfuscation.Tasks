@@ -197,7 +197,7 @@ namespace Obfuscation.Tasks
                 bool result = WaitGenerateObfuscationedFile(toolOutputFilePath, TimeoutMillisecond);
                 if (!result)
                 {
-                    Log.LogWarning($"Obfuscation task waiting for obfuscationed file output timeout. {nameof(TimeoutMillisecond)}: {TimeoutMillisecond}. Obfuscationed file path: {toolOutputFilePath}.");
+                    Log.LogError($"Obfuscation task waiting for obfuscationed file output timeout. {nameof(TimeoutMillisecond)}: {TimeoutMillisecond}. Can't find the obfuscationed file path: {toolOutputFilePath}.");
                     return false;
                 }
 
@@ -231,12 +231,13 @@ namespace Obfuscation.Tasks
         /// <returns></returns>
         private bool WaitGenerateObfuscationedFile(string outputFilePath, int timeout)
         {
+            var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
             var task = System.Threading.Tasks.Task.Run(async () =>
             {
                 const int delay = 500;
                 int checkCount = 0;
                 int delayMillisecondsTotal = 0;
-                while (true)
+                while (!cts.IsCancellationRequested)
                 {
                     LogMessageFromText("Checking if the obfuscation file has been generated.");
                     if (File.Exists(outputFilePath))
@@ -244,31 +245,19 @@ namespace Obfuscation.Tasks
                         LogMessageFromText("The obfuscation file has been generated");
                         return;
                     }
-                    else
-                    {
-                        await System.Threading.Tasks.Task.Delay(delay);
-                        checkCount++;
-                        delayMillisecondsTotal += delay;
-                    }
+
+                    await System.Threading.Tasks.Task.Delay(delay);
+                    checkCount++;
+                    delayMillisecondsTotal += delay;
                     LogMessageFromText($"Checked {checkCount} times and waited {delayMillisecondsTotal} milliseconds.");
                 }
-            }, new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(timeout)).Token);
+            }, cts.Token);
 
             task.Wait();
 
-            if (task.IsCanceled)
+            if (cts.IsCancellationRequested)
             {
                 return false;
-            }
-
-            if (!task.IsCompleted || task.IsFaulted)
-            {
-                if (task.Exception != null)
-                {
-                    throw task.Exception;
-                }
-
-                throw new FileNotFoundException("Unknown exception occurred", outputFilePath);
             }
 
             return true;
