@@ -45,7 +45,7 @@ namespace Obfuscation.Tasks
         /// <summary>
         /// 消息重要性级别。默认值：<see cref="MessageImportance.Normal"/>。
         /// </summary>
-        private readonly MessageImportance _messageImportance;
+        private MessageImportance _messageImportance;
 
         /// <summary>
         /// 返回混淆后的程序集文件路径。
@@ -54,11 +54,15 @@ namespace Obfuscation.Tasks
         [Output]
         public string? ObfuscationedFilePath { get; set; }
 
+
         /// <summary>
-        /// 构造函数
+        /// 一个任务的执行方法实现
         /// </summary>
-        public ObfuscationTask()
+        /// <returns>true, 表示本任务执行成功</returns>
+        public override bool Execute()
         {
+            //System.Diagnostics.Debugger.Launch();
+            
             if (Enum.TryParse(Importance, true, out MessageImportance importance))
             {
                 _messageImportance = importance;
@@ -67,15 +71,6 @@ namespace Obfuscation.Tasks
             {
                 _messageImportance = MessageImportance.Normal;
             }
-        }
-
-        /// <summary>
-        /// 一个任务的执行方法实现
-        /// </summary>
-        /// <returns>true, 表示本任务执行成功</returns>
-        public override bool Execute()
-        {
-            //Debugger.Launch();
 
             string dotNetVersion;
 #if NETSTANDARD2_0
@@ -181,6 +176,7 @@ namespace Obfuscation.Tasks
         /// <summary>
         /// 执行混淆
         /// </summary>
+        /// <returns>true, 表示本任务执行成功</returns>
         private bool ExecuteCore()
         {
             try
