@@ -22,7 +22,7 @@ jobs:
     - name: Build Obfuscation.Tasks project
       run: dotnet build src/Obfuscation.Tasks/Obfuscation.Tasks.csproj --no-restore --configuration Release
     - name: Pack Obfuscation.Tasks project
-      run: dotnet pack src/Obfuscation.Tasks/Obfuscation.Tasks.csproj --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg
+      run: dotnet pack src/Obfuscation.Tasks/Obfuscation.Tasks.csproj --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -o .
     - name: Publish package to NuGet
       run: dotnet nuget push *.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
     - name: publish package to GitHub
