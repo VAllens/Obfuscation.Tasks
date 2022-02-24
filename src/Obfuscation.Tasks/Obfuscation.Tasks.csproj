@@ -44,7 +44,8 @@
   <Target Name="CopyPackages" AfterTargets="GenerateNuspec">
     <PropertyGroup>
       <OutputPackageDir>$(SolutionDir)packages</OutputPackageDir>
-      <NuPkgFiles>$(MSBuildProjectDirectory)\$(OutputPath)$(PackageId).$(Version).nupkg</NuPkgFiles>
+      <NuPkgFiles Condition="'$(PackageOutputPath)' != ''">$(PackageOutputPath)\$(PackageId).$(Version).nupkg</NuPkgFiles>
+      <NuPkgFiles Condition="'$(PackageOutputPath)' == ''">$(MSBuildProjectDirectory)\$(OutputPath)$(PackageId).$(Version).nupkg</NuPkgFiles>
     </PropertyGroup>
     <Message Text="NuPkgFiles: $(NuPkgFiles)" Importance="high" />
     <Copy SourceFiles="$(NuPkgFiles)" DestinationFolder="$(OutputPackageDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
