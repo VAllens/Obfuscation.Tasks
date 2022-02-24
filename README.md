@@ -1,4 +1,4 @@
-# ![Obfuscation.Tasks](https://github.com/VAllens/Obfuscation.Tasks/raw/main/logo.png) Obfuscation.Tasks
+# ![Obfuscation.Tasks](/logo.png) Obfuscation.Tasks
 
 [![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
 [![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=main&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
