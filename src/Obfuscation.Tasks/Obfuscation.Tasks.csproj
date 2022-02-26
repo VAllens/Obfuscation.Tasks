@@ -7,7 +7,7 @@
     <PackageIcon>logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageTags>Obfuscation;Msbuild Tasks</PackageTags>
+    <PackageTags>Obfuscation;MSBuild Tasks</PackageTags>
     <BuildOutputTargetFolder>tasks</BuildOutputTargetFolder>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
@@ -41,15 +41,44 @@
     <None Include="Assets\buildMultiTargeting\**" Pack="True" PackagePath="buildMultiTargeting\" />
   </ItemGroup>
 
+  <Target Name="GetCopyPackageParameters" BeforeTargets="CopyPackages">
+    <PropertyGroup>
+      <PackageFileName>$(PackageId).$(Version).nupkg</PackageFileName>
+    </PropertyGroup>
+
+    <ConvertToAbsolutePath Paths="$(PackageOutputPath)" Condition="'$(PackageOutputPath)' != ''">
+      <Output TaskParameter="AbsolutePaths" PropertyName="AbsolutePackageOutputPath" />
+    </ConvertToAbsolutePath>
+    <Message Text="PackageOutputPath: $(PackageOutputPath)" Importance="high" />
+
+    <ConvertToAbsolutePath Paths="$(OutputPath)" Condition="'$(AbsolutePackageOutputPath)' == ''">
+      <Output TaskParameter="AbsolutePaths" PropertyName="AbsolutePackageOutputPath" />
+    </ConvertToAbsolutePath>
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
+    <Message Text="AbsolutePackageOutputPath: $(AbsolutePackageOutputPath)" Importance="high" />
+
+    <CombinePath BasePath="$(AbsolutePackageOutputPath)" Paths="$(PackageFileName)" >
+      <Output TaskParameter="CombinedPaths" PropertyName="NuPkgFiles"/>
+    </CombinePath>
+    <Message Text="NuPkgFiles: $(NuPkgFiles)" Importance="high" />
+
+    <ConvertToAbsolutePath Paths="$(SolutionDir)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="SolutionDir" />
+    </ConvertToAbsolutePath>
+    <CombinePath BasePath="$(SolutionDir)" Paths="packages" >
+      <Output TaskParameter="CombinedPaths" PropertyName="OutputPackageDir"/>
+    </CombinePath>
+    <Message Text="OutputPackageDir: $(OutputPackageDir)" Importance="high" />
+  </Target>
+
   <Target Name="CopyPackages" AfterTargets="GenerateNuspec">
     <PropertyGroup>
-      <OutputPackageDir>$(SolutionDir)packages</OutputPackageDir>
-      <NuPkgFiles Condition="'$(PackageOutputPath)' != ''">$(PackageOutputPath)\$(PackageId).$(Version).nupkg</NuPkgFiles>
-      <NuPkgFiles Condition="'$(PackageOutputPath)' == ''">$(MSBuildProjectDirectory)\$(OutputPath)$(PackageId).$(Version).nupkg</NuPkgFiles>
+      <HasCopyPackageParameters Condition="'$(OutputPackageDir)' != '' and '$(NuPkgFiles)' != ''">true</HasCopyPackageParameters>
     </PropertyGroup>
-    <Message Text="NuPkgFiles: $(NuPkgFiles)" Importance="high" />
-    <Copy SourceFiles="$(NuPkgFiles)" DestinationFolder="$(OutputPackageDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
-    <Message Text="Copy $(NuPkgFiles) to $(OutputPackageDir) successfully" Importance="high" />
+    <Copy SourceFiles="$(NuPkgFiles)" DestinationFolder="$(OutputPackageDir)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" Condition="'$(HasCopyPackageParameters)' == 'true'" />
+    <Message Text="Copy $(NuPkgFiles) to $(OutputPackageDir) successfully" Importance="high" Condition="'$(HasCopyPackageParameters)' == 'true'" />
+    <Error Text="NuPkgFiles or OutputPackageDir is empty" Condition="'$(HasCopyPackageParameters)' != 'true'" />
   </Target>
 
 </Project>
+
