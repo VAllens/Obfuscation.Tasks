@@ -1,7 +1,7 @@
 # ![Obfuscation.Tasks](/logo.png) Obfuscation.Tasks
 
-[![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
-[![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=main&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
+[![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
+[![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=develop&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
 [![CodeQL](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml)
 
 ## Summary
@@ -15,20 +15,20 @@ This is an [MSBuild](https://github.com/dotnet/msbuild) custom task that can be 
 .NET CLI:
 
 ```cmd
-dotnet add package Obfuscation.Tasks --version 1.0.0
+dotnet add package Obfuscation.Tasks --version 1.0.1
 ```
 
 or PowerShell:
 
 ```powershell
-Install-Package Obfuscation.Tasks -Version 1.0.0
+Install-Package Obfuscation.Tasks -Version 1.0.1
 ```
 
 or Edit project items:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Obfuscation.Tasks" Version="1.0.0">
+  <PackageReference Include="Obfuscation.Tasks" Version="1.0.1">
     <PrivateAssets>all</PrivateAssets>
     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
   </PackageReference>
