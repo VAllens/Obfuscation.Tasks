@@ -9,13 +9,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Obfuscation.Tasks" Version="1.0.0">
+    <PackageReference Include="Obfuscation.Tasks" Version="1.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Serilog.Enrichers.AssemblyName" Version="1.0.9" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+    <PackageReference Include="Serilog.Enrichers.Process" Version="2.0.2" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Trace" Version="3.0.0" />
   </ItemGroup>
 
   <Target Name="Obfuscation" AfterTargets="PostBuildEvent">
+    <ConvertToAbsolutePath Paths="$(OutputPath)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="AbsoluteOutputPath" />
+    </ConvertToAbsolutePath>
+    <ItemGroup>
+      <DependencyFilePaths Include="$(AbsoluteOutputPath)*.dll" Exclude="$(TargetPath)" />
+    </ItemGroup>
+    <Message Text="AbsoluteOutputPath: $(AbsoluteOutputPath)" Importance="high" />
+    <Message Text="DependencyFilePaths: @(DependencyFilePaths)" Importance="high" />
     <!--
       Input Parameters:
         ToolDir: Required。Example: \\192.168.1.155\dll
@@ -27,7 +46,12 @@
       Output Parameters:
         ObfuscationedFilePath: string。Default value: OutputFilePath
     -->
-    <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" OutputFilePath="" TimeoutMillisecond="2000" Importance="high">
+    <ObfuscationTask ToolDir="\\192.168.1.155\dll" 
+                     InputFilePath="$(TargetPath)"
+                     DependencyFiles="@(DependencyFilePaths)" 
+                     OutputFilePath="" 
+                     TimeoutMillisecond="300000" 
+                     Importance="high">
       <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
     </ObfuscationTask>
     <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />

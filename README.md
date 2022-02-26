@@ -1,8 +1,8 @@
-# ![Obfuscation.Tasks](https://github.com/VAllens/Obfuscation.Tasks/raw/main/logo.png) Obfuscation.Tasks
+# ![Obfuscation.Tasks](/logo.png) Obfuscation.Tasks
 
-[![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg?branch=main&event=push)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
+[![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
 [![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=main&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
-[![CodeQL](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml/badge.svg?branch=develop&event=push)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/codeql-analysis.yml)
 
 ## Summary
 
@@ -41,7 +41,7 @@ Triggered after `PostBuildEvent`:
 
 ```xml
 <Target Name="Obfuscation" AfterTargets="PostBuildEvent">
-  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" OutputFilePath="" TimeoutMillisecond="2000" Importance="high">
+  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" DependencyFiles="" OutputFilePath="" TimeoutMillisecond="2000" Importance="high">
     <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
   </ObfuscationTask>
   <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />
@@ -64,6 +64,7 @@ When the `OutputType` is `Exe`, it needs to depend on the `Publish` target.
 - Input Parameters:
     - `ToolDir`: Required. Example: `\\192.168.1.155\dll`
     - `InputFilePath`: Required. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples.dll`
+    - `DependencyFiles`: Optional. Example: `$(OutputPath)Serilog.dll;$(OutputPath)Serilog.Sinks.Console.dll`
     - `OutputFilePath`: Optional. Default value: `$(InputFilePath)_Secure.dll`. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll`
     - `TimeoutMillisecond`: Optional. Default value: `30000`
     - `Importance`: Optional. Default value: Normal. Options: `High`, `Normal`, `Low`. Reference `Message` task. 

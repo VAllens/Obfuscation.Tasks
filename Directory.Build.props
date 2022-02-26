@@ -7,7 +7,7 @@
     <Copyright>Copyright © Allen All Rights Reserved</Copyright>
     <Product>Obfuscation Tasks</Product>
     <FileVersion>$([System.DateTime]::Now.ToString("yy.M.d.Hmm"))</FileVersion>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>1.0.1</VersionPrefix>
     <!--Alpha release, typically used for work-in-progress and experimentation-->
     <!--<VersionSuffix Condition="'$(Configuration)' == 'Debug'">alpha</VersionSuffix>-->
     <!--Beta release, typically one that is feature complete for the next planned release, but may contain known bugs.-->
