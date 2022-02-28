@@ -17,16 +17,41 @@ namespace Obfuscation.Tasks
     public sealed class ObfuscationTask : Task
     {
         /// <summary>
+        /// 等待混淆输出程序集文件的超时时间(毫秒)，默认值：30000 (30秒)。
+        /// </summary>
+        private const int TIMEOUT_MILLISECOND = 30_000;
+
+        /// <summary>
+        /// 混淆文件名后缀。默认值: _Secure
+        /// </summary>
+        private const string OUTPUT_FILENAME_SUFFIX = "_Secure";
+
+        /// <summary>
+        /// 要混淆的程序集文件列表
+        /// </summary>
+        private IReadOnlyCollection<string> _inputFilePaths = Array.Empty<string>();
+
+        /// <summary>
+        /// 依赖的文件列表
+        /// </summary>
+        private IReadOnlyCollection<string> _dependencyFiles = Array.Empty<string>();
+
+        /// <summary>
+        /// 消息重要性级别。默认值：<see cref="MessageImportance.Normal"/>。
+        /// </summary>
+        private MessageImportance _messageImportance = MessageImportance.Normal;
+
+        /// <summary>
         /// 混淆工具目录
         /// </summary>
-        //[Required]
+        //[Required] //为了能够提示更明确和友好的错误信息，注释掉
         public string? ToolDir { get; set; }
 
         /// <summary>
-        /// 要混淆的程序集文件
+        /// 要混淆的程序集文件列表
         /// </summary>
         //[Required]
-        public string? InputFilePath { get; set; }
+        public string? InputFilePaths { get; set; }
 
         /// <summary>
         /// 依赖的文件
@@ -34,19 +59,9 @@ namespace Obfuscation.Tasks
         public string? DependencyFiles { get; set; }
 
         /// <summary>
-        /// 依赖的文件列表
-        /// </summary>
-        private IEnumerable<string> _dependencyFiles = Enumerable.Empty<string>();
-
-        /// <summary>
-        /// 被混淆后输出的程序集文件路径，可选。默认值：<see cref="InputFilePath"/> 的文件名+<see cref="ObfuscateFileNameSuffix"/>。例如：D:\InputFilePath\ObfuscationSamples_Secure.dll
-        /// </summary>
-        public string? OutputFilePath { get; set; }
-
-        /// <summary>
         /// 等待混淆输出程序集文件的超时时间(毫秒)，默认值：30000 (30秒)。
         /// </summary>
-        public int TimeoutMillisecond { get; set; }
+        public int TimeoutMillisecond { get; set; } = TIMEOUT_MILLISECOND;
 
         /// <summary>
         /// 消息重要性级别，可选。默认值：<see cref="MessageImportance.Normal"/>。枚举值详见：<see cref="MessageImportance"/>。
@@ -54,23 +69,15 @@ namespace Obfuscation.Tasks
         public string Importance { get; set; } = nameof(MessageImportance.Normal);
 
         /// <summary>
-        /// 消息重要性级别。默认值：<see cref="MessageImportance.Normal"/>。
-        /// </summary>
-        private MessageImportance _messageImportance = MessageImportance.Normal;
-
-        private const string OBFUSCATE_FILENAME_SUFFIX = "_Secure";
-
-        /// <summary>
         /// 混淆文件名后缀。默认值: _Secure
         /// </summary>
-        public string ObfuscateFileNameSuffix { get; set; } = OBFUSCATE_FILENAME_SUFFIX;
+        public string OutputFileNameSuffix { get; set; } = OUTPUT_FILENAME_SUFFIX;
 
         /// <summary>
-        /// 返回混淆后的程序集文件路径。
-        /// 等同 <see cref="OutputFilePath"/>，不同之处在于该属性将被 <see cref="Task"/> 返回给被引用的项目上下文
+        /// 返回混淆后的程序集文件路径列表
         /// </summary>
         [Output]
-        public string? ObfuscationedFilePath { get; set; }
+        public string? OutputFilePaths { get; set; }
 
         /// <summary>
         /// 一个任务的执行方法实现
@@ -128,12 +135,12 @@ namespace Obfuscation.Tasks
 
             if (Directory.Exists(ToolDir) == false)
             {
-                Log.LogError($"{nameof(ToolDir)} does not exist. {nameof(ToolDir)}: {ToolDir}");
+                Log.LogError($"The directory '{ToolDir}' not found. Input parameter: {nameof(ToolDir)}");
                 return false;
             }
 
-            //InputFilePath
-            if (string.IsNullOrWhiteSpace(InputFilePath))
+            //InputFilePaths
+            if (string.IsNullOrWhiteSpace(InputFilePaths))
             {
 #if NET472
                 string? targetPath = BuildEngine.GetPropertyValue("TargetPath");
@@ -142,66 +149,54 @@ namespace Obfuscation.Tasks
 #endif
                 if (string.IsNullOrWhiteSpace(targetPath))
                 {
-                    Log.LogError($"Please configure {nameof(InputFilePath)}. Example: D:\\sources\\ObfuscationSamples\\ObfuscationSamples\\bin\\Release\\ObfuscationSamples.dll");
+                    Log.LogError($"Please configure {nameof(InputFilePaths)}. Example: D:\\sources\\ObfuscationSamples\\ObfuscationSamples\\bin\\Release\\ObfuscationSamples.dll");
                     return false;
                 }
 
-                Log.LogWarning($"{nameof(InputFilePath)} is not configured, the default value will be used: {InputFilePath}.");
-            }
-            InputFilePath = InputFilePath!.Trim();
+                InputFilePaths = targetPath;
+                _inputFilePaths = new List<string>() { targetPath! };
 
-            if (File.Exists(InputFilePath) == false)
+                Log.LogWarning($"{nameof(InputFilePaths)} is not configured, the default value will be used: {InputFilePaths}.");
+            }
+            else
             {
-                Log.LogError($"{nameof(InputFilePath)} does not exist. {nameof(InputFilePath)}: {InputFilePath}");
-                return false;
+                InputFilePaths = InputFilePaths!.Trim();
+                _inputFilePaths = InputFilePaths!.Split(';').Where(x => !string.IsNullOrWhiteSpace(x)).ToList().AsReadOnly();
+            }
+
+            foreach (string inputFilePath in _inputFilePaths)
+            {
+                if (File.Exists(inputFilePath) == false)
+                {
+                    Log.LogError($"The File '{inputFilePath}' not found. Input parameter: {nameof(InputFilePaths)}");
+                    return false;
+                }
             }
 
             //DependencyFiles
             if (!string.IsNullOrWhiteSpace(DependencyFiles))
             {
                 DependencyFiles = DependencyFiles!.Trim();
-                string[] dependencyFiles = DependencyFiles.Split(';');
-                if (dependencyFiles.Length > 0)
+                List<string> dependencyFiles = DependencyFiles.Split(';').Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+                if (dependencyFiles.Count > 0)
                 {
                     foreach (string dependencyFile in dependencyFiles)
                     {
                         if (!File.Exists(dependencyFile))
                         {
-                            Log.LogError($"{nameof(DependencyFiles)} does not exist. {nameof(dependencyFile)}: {dependencyFile}");
+                            Log.LogError($"The File '{dependencyFile}' not found. Input parameter: {nameof(dependencyFile)}");
                             return false;
                         }
                     }
 
-                    _dependencyFiles = dependencyFiles;
-                }
-            }
-
-            //OutputFilePath
-            if (string.IsNullOrWhiteSpace(OutputFilePath))
-            {
-                string dir = Path.GetDirectoryName(InputFilePath);
-                string ext = Path.GetExtension(InputFilePath);
-                string fileName = Path.GetFileNameWithoutExtension(InputFilePath);
-                string newFileName = $"{fileName}{ObfuscateFileNameSuffix}{ext}";
-                OutputFilePath = Path.Combine(dir, newFileName);
-
-                Log.LogWarning($"{nameof(OutputFilePath)} is not configured, the default value will be used: {OutputFilePath}.");
-            }
-            else
-            {
-                OutputFilePath = OutputFilePath!.Trim();
-                string outDir = Path.GetDirectoryName(OutputFilePath);
-                if (Directory.Exists(outDir) == false)
-                {
-                    LogMessageFromText($"Creating Output file directory: {outDir}");
-                    Directory.CreateDirectory(outDir);
+                    _dependencyFiles = dependencyFiles.AsReadOnly();
                 }
             }
 
             //TimeoutMillisecond
             if (TimeoutMillisecond <= 0)
             {
-                TimeoutMillisecond = 30 * 1000;
+                TimeoutMillisecond = TIMEOUT_MILLISECOND;
                 Log.LogWarning($"{nameof(TimeoutMillisecond)} is not configured, the default value will be used: {TimeoutMillisecond}.");
             }
 
@@ -212,9 +207,9 @@ namespace Obfuscation.Tasks
             }
 
             //ObfuscateFileNameSuffix
-            if (string.IsNullOrWhiteSpace(ObfuscateFileNameSuffix))
+            if (string.IsNullOrWhiteSpace(OutputFileNameSuffix))
             {
-                ObfuscateFileNameSuffix = OBFUSCATE_FILENAME_SUFFIX;
+                OutputFileNameSuffix = OUTPUT_FILENAME_SUFFIX;
             }
 
             return true;
@@ -228,8 +223,8 @@ namespace Obfuscation.Tasks
         {
             try
             {
-                //Copy dependency file to obfuscation tool dir
-                List<string> obfuscationDependencyFilePaths = new List<string>();
+                //Copy dependency files to obfuscation tool dir
+                List<string> obfuscationDependencyFilePaths = new();
                 if (_dependencyFiles.Any())
                 {
                     foreach (string dependencyFile in _dependencyFiles)
@@ -241,31 +236,45 @@ namespace Obfuscation.Tasks
                     }
                 }
 
-                //Delete obfuscationed dll in out dir
-                string newFileName = $"{Path.GetFileNameWithoutExtension(InputFilePath)}{ObfuscateFileNameSuffix}{Path.GetExtension(InputFilePath)}";
-                string obfuscationOutputFilePath = Path.Combine(ToolDir, newFileName);
-                LogMessageFromText($"Deleting obfuscationed file in {nameof(ToolDir)}: {obfuscationOutputFilePath}");
-                File.Delete(obfuscationOutputFilePath);
+                //Delete obfuscationed dlls in out dir (Always assume that these files may exist)
+                List<KeyValuePair<string, string>> obfuscationOutputFilePaths = new();
+                foreach (string inputFilePath in _inputFilePaths)
+                {
+                    string newFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}{OutputFileNameSuffix}{Path.GetExtension(inputFilePath)}";
+                    string obfuscationOutputFilePath = Path.Combine(ToolDir, newFileName);
+                    LogMessageFromText($"Deleting obfuscationed file in {nameof(ToolDir)}: {obfuscationOutputFilePath}");
+                    File.Delete(obfuscationOutputFilePath);
+                    obfuscationOutputFilePaths.Add(new KeyValuePair<string, string>(obfuscationOutputFilePath, inputFilePath));
+                }
 
-                //Copy input file to obfuscation tool dir
-                string obfuscationInputFilePath = Path.Combine(ToolDir, Path.GetFileName(InputFilePath));
-                LogMessageFromText($"Copying {nameof(InputFilePath)}: {InputFilePath} => {obfuscationInputFilePath}");
-                File.Copy(InputFilePath, obfuscationInputFilePath, overwrite: true);
+                //Copy input files to obfuscation tool dir
+                List<string> obfuscationInputFilePaths = new();
+                foreach (string inputFilePath in _inputFilePaths)
+                {
+                    string obfuscationInputFilePath = Path.Combine(ToolDir, Path.GetFileName(inputFilePath));
+                    LogMessageFromText($"Copying input file: {inputFilePath} => {obfuscationInputFilePath}");
+                    File.Copy(InputFilePaths, obfuscationInputFilePath, overwrite: true);
+                    obfuscationInputFilePaths.Add(obfuscationInputFilePath);
+                }
 
                 //Wait obfuscation file generated
-                LogMessageFromText($"Waiting generate obfuscation File");
-                bool result = WaitGenerateObfuscationedFile(obfuscationOutputFilePath, TimeoutMillisecond);
+                LogMessageFromText($"Waiting generate obfuscation files");
+                string[] obfuscationFilePaths = obfuscationOutputFilePaths.Select(x => x.Key).ToArray();
+                bool result = WaitGenerateObfuscationedFile(obfuscationFilePaths, TimeoutMillisecond);
                 if (!result)
                 {
-                    Log.LogError($"Obfuscation task waiting for obfuscationed file output timeout. {nameof(TimeoutMillisecond)}: {TimeoutMillisecond}. Can't find the obfuscationed file path: {obfuscationOutputFilePath}.");
+                    Log.LogError($"Obfuscation task waiting for obfuscationed file output timeout. {nameof(TimeoutMillisecond)}: {TimeoutMillisecond}. Can't find the obfuscationed file paths: {string.Join(";", obfuscationFilePaths)}.");
                     return false;
                 }
 
-                //Delete input file in obfuscation tool dir
-                LogMessageFromText($"Deleting input file in {nameof(ToolDir)}: {obfuscationInputFilePath}.");
-                File.Delete(obfuscationInputFilePath);
+                //Delete input files in obfuscation tool dir
+                foreach (string obfuscationInputFilePath in obfuscationInputFilePaths)
+                {
+                    LogMessageFromText($"Deleting input file in {nameof(ToolDir)}: {obfuscationInputFilePath}.");
+                    File.Delete(obfuscationInputFilePath);
+                }
 
-                //Delete dependency file in obfuscation tool dir
+                //Delete dependency files in obfuscation tool dir
                 if (obfuscationDependencyFilePaths.Any())
                 {
                     foreach (string dependencyFile in obfuscationDependencyFilePaths)
@@ -273,21 +282,33 @@ namespace Obfuscation.Tasks
                         LogMessageFromText($"Deleting dependency file in {nameof(ToolDir)}: {dependencyFile}.");
                         File.Delete(dependencyFile);
 
-                        string newDependencyFileName = $"{Path.GetFileNameWithoutExtension(dependencyFile)}{ObfuscateFileNameSuffix}{Path.GetExtension(dependencyFile)}";
+                        //Always assume this files may exist
+                        string newDependencyFileName = $"{Path.GetFileNameWithoutExtension(dependencyFile)}{OutputFileNameSuffix}{Path.GetExtension(dependencyFile)}";
                         string obfuscationDependencyFilePath = Path.Combine(ToolDir, newDependencyFileName);
                         LogMessageFromText($"Deleting obfuscationed‘s dependency file in {nameof(ToolDir)}: {obfuscationDependencyFilePath}.");
                         File.Delete(obfuscationDependencyFilePath);
                     }
                 }
 
-                //Move out file to out path
-                LogMessageFromText($"Moving Obfuscation output file path: {obfuscationOutputFilePath} => {OutputFilePath}");
-                File.Delete(OutputFilePath);
-                File.Move(obfuscationOutputFilePath, OutputFilePath);
+                //Move obfuscationed files to output path
+                List<string> outputFilePaths = new();
+                foreach (KeyValuePair<string, string> keyValuePair in obfuscationOutputFilePaths)
+                {
+                    string obfuscationOutputFilePath = keyValuePair.Key;
+                    string inputFilePath = keyValuePair.Value;
+
+                    string dir = Path.GetDirectoryName(inputFilePath);
+                    string fileName = Path.GetFileName(obfuscationOutputFilePath);
+                    string outputFilePath = Path.Combine(dir, fileName);
+                    LogMessageFromText($"Moving obfuscationed file path: {obfuscationOutputFilePath} => {outputFilePath}");
+                    File.Delete(outputFilePath);
+                    File.Move(obfuscationOutputFilePath, outputFilePath);
+                    outputFilePaths.Add(outputFilePath);
+                }
 
                 //Output parameter
-                ObfuscationedFilePath = OutputFilePath;
-                LogMessageFromText($"Obfuscation completed");
+                OutputFilePaths = outputFilePaths.Count > 0 ? string.Join(";", outputFilePaths) : string.Empty;
+                LogMessageFromText("Obfuscation completed");
             }
             catch (Exception ex)
             {
@@ -301,23 +322,35 @@ namespace Obfuscation.Tasks
         /// <summary>
         /// 阻塞等待生成受保护文件。如果始终没有输出，则超时。
         /// </summary>
-        /// <param name="outputFilePath">输出文件路径</param>
+        /// <param name="outputFilePaths">输出文件路径</param>
         /// <param name="timeout">超时时间(毫秒)</param>
         /// <returns></returns>
-        private bool WaitGenerateObfuscationedFile(string outputFilePath, int timeout)
+        private bool WaitGenerateObfuscationedFile(IReadOnlyCollection<string> outputFilePaths, int timeout)
         {
             var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(timeout));
             var task = System.Threading.Tasks.Task.Run(async () =>
             {
+                Dictionary<string, bool> generatedFiles = outputFilePaths.ToDictionary(x => x, x => false);
                 const int delay = 500;
                 int checkCount = 0;
                 int delayMillisecondsTotal = 0;
                 while (!cts.IsCancellationRequested)
                 {
-                    LogMessageFromText("Checking if the obfuscation file has been generated.");
-                    if (File.Exists(outputFilePath))
+                    LogMessageFromText("Checking if the obfuscation file has been generated...");
+
+                    string[] tempGeneratedFiles = generatedFiles.Where(x => !x.Value).Select(x => x.Key).ToArray();
+                    foreach (string filePath in tempGeneratedFiles)
                     {
-                        LogMessageFromText("The obfuscation file has been generated");
+                        if (File.Exists(filePath))
+                        {
+                            generatedFiles[filePath] = true;
+                            LogMessageFromText($"The obfuscation file '{filePath}' has been generated");
+                        }
+                    }
+
+                    if (generatedFiles.All(x => x.Value))
+                    {
+                        LogMessageFromText("All obfuscation files has been generated");
                         return;
                     }
 

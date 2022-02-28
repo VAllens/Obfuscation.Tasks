@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Obfuscation.Tasks" Version="1.0.1">
+    <PackageReference Include="Obfuscation.Tasks" Version="1.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -38,23 +38,19 @@
     <!--
       Input Parameters:
         ToolDir: Required。Example: \\192.168.1.155\dll
-        InputFilePath: Required。Example: D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples.dll
-        OutputFilePath: Optional。Default value: $(InputFilePath)_Secure.dll。Example: D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll
+        InputFilePaths: Required。Single example: D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples.dll; Multiple examples: $(TargetPath);D:\ref\Samples1.dll;D:\ref\Samples2.dll
+        DependencyFiles: Optional. Example: $(OutputPath)Serilog.dll;$(OutputPath)Serilog.Sinks.Console.dll
         TimeoutMillisecond: Optional。Default value: 30000
-        Importance: Optional。Default value: Normal。Options: High、Normal、Low
+        Importance: Optional。Default value: Normal。Options: High, Normal, Low
+        OutputFileNameSuffix: Optional. Default value: _Secure
       
       Output Parameters:
-        ObfuscationedFilePath: string。Default value: OutputFilePath
+        OutputFilePaths: string。Default value: $(InputFilePaths)$(OutputFileNameSuffix).dll. Example: D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll
     -->
-    <ObfuscationTask ToolDir="\\192.168.1.155\dll" 
-                     InputFilePath="$(TargetPath)"
-                     DependencyFiles="@(DependencyFilePaths)" 
-                     OutputFilePath="" 
-                     TimeoutMillisecond="300000" 
-                     Importance="high">
-      <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
+    <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePaths="$(TargetPath)" TimeoutMillisecond="300000" OutputFileNameSuffix="" Importance="high">
+      <Output TaskParameter="OutputFilePaths" PropertyName="SecuredFilePaths" />
     </ObfuscationTask>
-    <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />
+    <Message Text="SecuredFilePaths: $(SecuredFilePaths)" Importance="high" />
   </Target>
 
 </Project>
