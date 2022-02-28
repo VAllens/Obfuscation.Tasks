@@ -1,4 +1,4 @@
-# ![Obfuscation.Tasks](/logo.png) Obfuscation.Tasks
+# ![Obfuscation.Tasks](logo.png) Obfuscation.Tasks
 
 [![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
 [![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=develop&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
@@ -15,20 +15,20 @@ This is an [MSBuild](https://github.com/dotnet/msbuild) custom task that can be 
 .NET CLI:
 
 ```cmd
-dotnet add package Obfuscation.Tasks --version 1.0.1
+dotnet add package Obfuscation.Tasks --version 1.0.2
 ```
 
 or PowerShell:
 
 ```powershell
-Install-Package Obfuscation.Tasks -Version 1.0.1
+Install-Package Obfuscation.Tasks -Version 1.0.2
 ```
 
 or Edit project items:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Obfuscation.Tasks" Version="1.0.1">
+  <PackageReference Include="Obfuscation.Tasks" Version="1.0.2">
     <PrivateAssets>all</PrivateAssets>
     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
   </PackageReference>
@@ -41,10 +41,10 @@ Triggered after `PostBuildEvent`:
 
 ```xml
 <Target Name="Obfuscation" AfterTargets="PostBuildEvent">
-  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" DependencyFiles="" OutputFilePath="" TimeoutMillisecond="2000" Importance="high">
-    <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
+  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePaths="$(TargetPath)" DependencyFiles="" OutputFileNameSuffix="" TimeoutMillisecond="2000" Importance="high">
+    <Output TaskParameter="OutputFilePaths" PropertyName="SecuredFilePaths" />
   </ObfuscationTask>
-  <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />
+  <Message Text="SecuredFilePaths: $(SecuredFilePaths)" Importance="high" />
 </Target>
 ```
 
@@ -54,23 +54,23 @@ When the `OutputType` is `Exe`, it needs to depend on the `Publish` target.
 
 ```xml
 <Target Name="Obfuscation" AfterTargets="GenerateNuspec">
-  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" Importance="low">
-    <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
+  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePaths="$(TargetPath)" Importance="low">
+    <Output TaskParameter="OutputFilePaths" PropertyName="SecuredFilePaths" />
   </ObfuscationTask>
-  <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />
+  <Message Text="SecuredFilePaths: $(SecuredFilePaths)" Importance="high" />
 </Target>
 ```
 
 - Input Parameters:
     - `ToolDir`: Required. Example: `\\192.168.1.155\dll`
-    - `InputFilePath`: Required. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples.dll`
+    - `InputFilePaths`: Required. Single example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples.dll`; Multiple examples: `$(TargetPath);D:\ref\Samples1.dll;D:\ref\Samples2.dll`
     - `DependencyFiles`: Optional. Example: `$(OutputPath)Serilog.dll;$(OutputPath)Serilog.Sinks.Console.dll`
-    - `OutputFilePath`: Optional. Default value: `$(InputFilePath)_Secure.dll`. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll`
     - `TimeoutMillisecond`: Optional. Default value: `30000`
-    - `Importance`: Optional. Default value: Normal. Options: `High`, `Normal`, `Low`. Reference `Message` task. 
+    - `Importance`: Optional. Default value: Normal. Options: `High`, `Normal`, `Low`. Reference `Message` task
+    - `OutputFileNameSuffix`: Optional. Default value: `_Secure`
       
 - Output Parameters:
-    - `ObfuscationedFilePath`: string. Default value: `OutputFilePath`
+    - `OutputFilePaths`: string. Default value: `$(InputFilePaths)$(OutputFileNameSuffix).dll`. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll`
 
 ## Support
 
