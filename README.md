@@ -1,4 +1,4 @@
-# ![Obfuscation.Tasks](/logo.png) Obfuscation.Tasks
+# ![Obfuscation.Tasks](logo.png) Obfuscation.Tasks
 
 [![.NET Build](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/build.yml)
 [![NuGet Publish](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml/badge.svg?branch=develop&event=pull_request)](https://github.com/VAllens/Obfuscation.Tasks/actions/workflows/publish.yml)
@@ -41,7 +41,7 @@ Triggered after `PostBuildEvent`:
 
 ```xml
 <Target Name="Obfuscation" AfterTargets="PostBuildEvent">
-  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" DependencyFiles="" OutputFilePath="" TimeoutMillisecond="2000" Importance="high">
+  <ObfuscationTask ToolDir="\\192.168.1.155\dll" InputFilePath="$(TargetPath)" DependencyFiles="" OutputFilePath="" ObfuscateFileNameSuffix="" TimeoutMillisecond="2000" Importance="high">
     <Output TaskParameter="ObfuscationedFilePath" PropertyName="SecuredFilePath" />
   </ObfuscationTask>
   <Message Text="SecuredFilePath: $(SecuredFilePath)" Importance="high" />
@@ -67,7 +67,8 @@ When the `OutputType` is `Exe`, it needs to depend on the `Publish` target.
     - `DependencyFiles`: Optional. Example: `$(OutputPath)Serilog.dll;$(OutputPath)Serilog.Sinks.Console.dll`
     - `OutputFilePath`: Optional. Default value: `$(InputFilePath)_Secure.dll`. Example: `D:\sources\ObfuscationSamples\ObfuscationSamples\bin\Release\ObfuscationSamples_Secure.dll`
     - `TimeoutMillisecond`: Optional. Default value: `30000`
-    - `Importance`: Optional. Default value: Normal. Options: `High`, `Normal`, `Low`. Reference `Message` task. 
+    - `Importance`: Optional. Default value: Normal. Options: `High`, `Normal`, `Low`. Reference `Message` task
+    - `ObfuscateFileNameSuffix`: Optional. Default value: _Secure
       
 - Output Parameters:
     - `ObfuscationedFilePath`: string. Default value: `OutputFilePath`

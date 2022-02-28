@@ -39,7 +39,7 @@ namespace Obfuscation.Tasks
         private IEnumerable<string> _dependencyFiles = Enumerable.Empty<string>();
 
         /// <summary>
-        /// 被混淆后输出的程序集文件路径，可选。默认值：<see cref="InputFilePath"/> 的文件名+_Secure。例如：D:\InputFilePath\ObfuscationSamples_Secure.dll
+        /// 被混淆后输出的程序集文件路径，可选。默认值：<see cref="InputFilePath"/> 的文件名+<see cref="ObfuscateFileNameSuffix"/>。例如：D:\InputFilePath\ObfuscationSamples_Secure.dll
         /// </summary>
         public string? OutputFilePath { get; set; }
 
@@ -51,12 +51,19 @@ namespace Obfuscation.Tasks
         /// <summary>
         /// 消息重要性级别，可选。默认值：<see cref="MessageImportance.Normal"/>。枚举值详见：<see cref="MessageImportance"/>。
         /// </summary>
-        public string? Importance { get; set; } = nameof(MessageImportance.Normal);
+        public string Importance { get; set; } = nameof(MessageImportance.Normal);
 
         /// <summary>
         /// 消息重要性级别。默认值：<see cref="MessageImportance.Normal"/>。
         /// </summary>
         private MessageImportance _messageImportance = MessageImportance.Normal;
+
+        private const string OBFUSCATE_FILENAME_SUFFIX = "_Secure";
+
+        /// <summary>
+        /// 混淆文件名后缀。默认值: _Secure
+        /// </summary>
+        public string ObfuscateFileNameSuffix { get; set; } = OBFUSCATE_FILENAME_SUFFIX;
 
         /// <summary>
         /// 返回混淆后的程序集文件路径。
@@ -175,7 +182,7 @@ namespace Obfuscation.Tasks
                 string dir = Path.GetDirectoryName(InputFilePath);
                 string ext = Path.GetExtension(InputFilePath);
                 string fileName = Path.GetFileNameWithoutExtension(InputFilePath);
-                string newFileName = $"{fileName}_Secure{ext}";
+                string newFileName = $"{fileName}{ObfuscateFileNameSuffix}{ext}";
                 OutputFilePath = Path.Combine(dir, newFileName);
 
                 Log.LogWarning($"{nameof(OutputFilePath)} is not configured, the default value will be used: {OutputFilePath}.");
@@ -204,6 +211,12 @@ namespace Obfuscation.Tasks
                 _messageImportance = importance;
             }
 
+            //ObfuscateFileNameSuffix
+            if (string.IsNullOrWhiteSpace(ObfuscateFileNameSuffix))
+            {
+                ObfuscateFileNameSuffix = OBFUSCATE_FILENAME_SUFFIX;
+            }
+
             return true;
         }
 
@@ -229,7 +242,7 @@ namespace Obfuscation.Tasks
                 }
 
                 //Delete obfuscationed dll in out dir
-                string newFileName = $"{Path.GetFileNameWithoutExtension(InputFilePath)}_Secure{Path.GetExtension(InputFilePath)}";
+                string newFileName = $"{Path.GetFileNameWithoutExtension(InputFilePath)}{ObfuscateFileNameSuffix}{Path.GetExtension(InputFilePath)}";
                 string obfuscationOutputFilePath = Path.Combine(ToolDir, newFileName);
                 LogMessageFromText($"Deleting obfuscationed file in {nameof(ToolDir)}: {obfuscationOutputFilePath}");
                 File.Delete(obfuscationOutputFilePath);
@@ -260,7 +273,7 @@ namespace Obfuscation.Tasks
                         LogMessageFromText($"Deleting dependency file in {nameof(ToolDir)}: {dependencyFile}.");
                         File.Delete(dependencyFile);
 
-                        string newDependencyFileName = $"{Path.GetFileNameWithoutExtension(dependencyFile)}_Secure{Path.GetExtension(dependencyFile)}";
+                        string newDependencyFileName = $"{Path.GetFileNameWithoutExtension(dependencyFile)}{ObfuscateFileNameSuffix}{Path.GetExtension(dependencyFile)}";
                         string obfuscationDependencyFilePath = Path.Combine(ToolDir, newDependencyFileName);
                         LogMessageFromText($"Deleting obfuscationed‘s dependency file in {nameof(ToolDir)}: {obfuscationDependencyFilePath}.");
                         File.Delete(obfuscationDependencyFilePath);
